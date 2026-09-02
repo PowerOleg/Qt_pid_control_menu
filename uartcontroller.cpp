@@ -70,41 +70,36 @@ void UartController::SetPortName(const QString &name)
     m_portName = name;
 }
 
-void UartController::SlotEnable()
+void UartController::SlotEnable(const QString &data)
 {
-    QByteArray byteArray;//=QByteArray::fromHex("01");
-    byteArray.resize(0);
-    byteArray.append(static_cast<char>(0x01));
-    SendData(byteArray, byteArray.size());
-}
-
-void UartController::SendData(QByteArray &byteArray, int length)
-{
-    if (!port->isOpen())
-    {
-        qDebug() << "Порт не открыт!";
+    if (!port->isOpen() || !port)
         return;
-    }
-    if (byteArray.length() == length)
+
+    QByteArray dataArray = data.toUtf8() + "\r\n";
+    qint64 written = port->write(dataArray);
+    if (written == -1)
     {
-        for (int i = 0; i<length; i++)
-        {
-            QByteArray temp;
-            temp.resize(0);
-            temp.append(byteArray[i]);
-            port->write(temp);
-            port->flush();
-            //port->waitForBytesWritten();//waitForBytesWritten блокирует поток и readyRead всё крашит
-            temp.clear();
-        }
-        byteArray.clear();
+        qWarning() << "Ошибка записи в порт";
+    }
+    else
+    {
+        qDebug() << "Отправлено:" << written << "байт, данные:" << data;
     }
 }
 
 void UartController::SlotDisable()
 {
-    QByteArray byteArray;
-    byteArray.resize(0);
-    byteArray.append(static_cast<unsigned char>(0x02));
-    SendData(byteArray, byteArray.size());
+    if (!port->isOpen() || !port)
+        return;
+
+    QByteArray dataArray = QStringLiteral("-1\r\n").toUtf8();//QByteArray dataArray;dataArray.append(static_cast<char>(-1));
+    qint64 written = port->write(dataArray);
+    if (written == -1)
+    {
+        qWarning() << "Ошибка записи в порт";
+    }
+    else
+    {
+        qDebug() << "Отправлено:" << written << "байт" << "| ascii:" << dataArray;
+    }
 }
