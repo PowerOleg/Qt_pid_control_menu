@@ -17,8 +17,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
     uartController->moveToThread(thread);
     uartController->port->moveToThread(thread);
+    connect(uartController, &UartController::RefreshTemperature, this, [this](float temp) {
+            ui->txtTemperature->setText(QString::number(temp, 'f', 1));
+        });
     connect(ui->btnOn, &QPushButton::clicked, this, [this]() {
-        QString value = QString::number(ui->sbSetpoint->value(), 'f', 1);
+        QString value = QString::number(ui->dsbSetpoint->value(), 'f', 1);
         QMetaObject::invokeMethod(
             uartController,
             "SlotEnable",

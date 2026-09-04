@@ -5,9 +5,6 @@
 UartController::UartController(QObject *parent) : QObject{parent}, m_portName("COM4")
 {
     port = new QSerialPort();
-    m_idleTimer = new QTimer(this);
-    m_idleTimer->setSingleShot(true);
-    m_idleTimer->setInterval(1000);
 
     connect(port, &QSerialPort::readyRead, this, &UartController::SlotRead);
     connect(port, &QSerialPort::bytesWritten, [](qint64 bytes)
@@ -32,8 +29,12 @@ UartController::~UartController()
 
 void UartController::SlotRead()
 {
-        m_buffer.append(port->readAll());
-        m_idleTimer->start();
+    bool ok = false;
+    float temperature = port->readAll().toFloat(&ok);
+    if (ok)
+    {
+        emit RefreshTemperature(temperature);
+    }
 }
 
 void UartController::SlotInit()
@@ -75,7 +76,7 @@ void UartController::SlotEnable(const QString &data)
     if (!port->isOpen() || !port)
         return;
 
-    QByteArray dataArray = data.toUtf8() + "\r\n";
+    QByteArray dataArray = data.toUtf8();
     qint64 written = port->write(dataArray);
     if (written == -1)
     {
@@ -92,7 +93,7 @@ void UartController::SlotDisable()
     if (!port->isOpen() || !port)
         return;
 
-    QByteArray dataArray = QStringLiteral("-1\r\n").toUtf8();//QByteArray dataArray;dataArray.append(static_cast<char>(-1));
+    QByteArray dataArray = QStringLiteral("-1").toUtf8();//QByteArray dataArray;dataArray.append(static_cast<char>(-1));
     qint64 written = port->write(dataArray);
     if (written == -1)
     {

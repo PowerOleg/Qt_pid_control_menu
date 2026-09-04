@@ -3,7 +3,6 @@
 
 #include <QObject>
 #include <QByteArray>
-#include <QTimer>
 
 class QSerialPort;
 
@@ -20,7 +19,6 @@ private:
     bool PortInit();
     QString m_portName;
     QByteArray m_buffer;
-    QTimer *m_idleTimer;
 
 public slots:
     void SlotInit();
@@ -28,6 +26,9 @@ public slots:
     void SlotEnable(const QString &data);
     void SlotDisable();
     void SlotRead();
+
+signals:
+    void RefreshTemperature(float temp);
 };
 
 #endif // UART_H
